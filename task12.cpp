@@ -5,12 +5,11 @@
 #define ROW 9
 #define COL 11
 
-const int dir[4][2] = {{-1,0}, {1,0}, {0,-1}, {0,1}};
+const int dir[4][2] = {{-1,0}, {0,-1}, {0,1}, {1,0}};
 
 using namespace std;
 
-struct coord
-{
+struct coord{
     int x;
     int y;
     coord(int x = 0, int y = 0){
@@ -35,15 +34,17 @@ public:
 
 bool can_place(int row, int col);
 int find_max_fixed_number(cell field[ROW][COL], int max_number, int &row, int &col);
-bool find_same_fixed_number_BFS(cell field[ROW][COL], int value, int start_row, int start_col);
+int count_connect_numbers(cell field[ROW][COL], int value, int start_row, int start_col);
+bool connect_same_fixed_number_bfs(cell field[ROW][COL], int value, int start_row, int start_col);
 bool connect_path(cell field[ROW][COL], int value, int start_row, int start_col, int finish_row, int finish_col);
+bool fill_fixed_numbers(cell field[ROW][COL], int connected, int value, int start_row, int start_col);
 void solve(cell field[ROW][COL]);
 void print_field(cell field[ROW][COL]);
 
 int main(){
     cell field[ROW][COL] = {cell(), cell(), cell(), cell(), cell(), cell(), cell(), cell(), cell(), cell(), cell(),
                             cell(), cell(), cell(), cell(), cell(), cell(), cell(), cell(), cell(), cell(), cell(),
-                            cell(1), cell(), cell(), cell(), cell(), cell(), cell(), cell(), cell(), cell(19), cell(19),
+                            cell(1), cell(), cell(), cell(), cell(), cell(), cell(), cell(), cell(), cell(), cell(19),
                             cell(5), cell(), cell(), cell(), cell(), cell(), cell(), cell(), cell(), cell(), cell(19),
                             cell(), cell(), cell(), cell(), cell(), cell(), cell(), cell(), cell(), cell(), cell(),
                             cell(1), cell(), cell(), cell(), cell(), cell(), cell(), cell(), cell(), cell(), cell(19),
@@ -89,7 +90,34 @@ int find_max_fixed_number(cell field[ROW][COL], int currect_max_number, int &row
     return max_num;
 }
 
-bool find_same_fixed_number_BFS(cell field[ROW][COL], int value, int start_row, int start_col){
+int count_connect_numbers(cell field[ROW][COL], int value, int start_row, int start_col){
+    queue<coord> search;
+    bool visited[ROW][COL] = {false};
+    int count = 1;
+
+    search.push(coord(start_row, start_col));
+    visited[start_row][start_col] = true;
+
+    while(!search.empty()){
+        coord currect = search.front();
+        search.pop();
+
+        for(int i = 0; i < 4; i++){
+            int new_row = currect.x + dir[i][0];
+            int new_col = currect.y + dir[i][1];
+
+            if(field[new_row][new_col].get_connected() && !visited[new_row][new_col] 
+               && can_place(new_row, new_col) && field[new_row][new_col].get_value() == value){
+                visited[new_row][new_col] = true;
+                search.push(coord(new_row, new_col));
+                count++;
+            }
+        }
+    }
+    return count;
+}
+
+bool connect_same_fixed_number_bfs(cell field[ROW][COL], int value, int start_row, int start_col){
     queue<coord> search;
     bool visited[ROW][COL] = {false};
 
@@ -104,7 +132,7 @@ bool find_same_fixed_number_BFS(cell field[ROW][COL], int value, int start_row, 
             int new_row = currect.x + dir[i][0];
             int new_col = currect.y + dir[i][1];
 
-            cout << start_row << " , " << start_col << " -> " << new_row << " , " << new_col << endl;
+            //cout << start_row << " , " << start_col << " -> " << new_row << " , " << new_col << endl;
 
             if((abs(start_row - new_row) + abs(start_col - new_col)) > value) continue;
 
@@ -120,7 +148,6 @@ bool find_same_fixed_number_BFS(cell field[ROW][COL], int value, int start_row, 
                     if(connect_path(field, value, start_row, start_col, new_row, new_col)){
                         field[start_row][start_col].set_connected();
                         field[new_row][new_col].set_connected();
-                    
                         return true;
                     }
                 }
@@ -138,6 +165,7 @@ bool connect_path(cell field[ROW][COL], int value, int start_row, int start_col,
         for(int col = col_start + 1; col < col_end ; col++){
             if(field[start_row][col].get_fixed() && field[start_row][col].get_value() != value) return false;
             field[start_row][col].set_value(value);
+            field[start_row][col].set_connected();
         }
         return true;
     }
@@ -148,6 +176,7 @@ bool connect_path(cell field[ROW][COL], int value, int start_row, int start_col,
         for (int row = row_start + 1; row < row_end; row++) {
             if (field[row][start_col].get_fixed() && field[row][start_col].get_value() != value) return false; 
             field[row][start_col].set_value(value);
+            field[row][start_col].set_connected();;
         }
         return true;
     }
@@ -160,11 +189,14 @@ bool connect_path(cell field[ROW][COL], int value, int start_row, int start_col,
                 break;
             }
             field[start_row][col].set_value(value);
+            field[start_row][col].set_connected();
+
         }
         if (through_col) {
             for (int row = min(start_row, finish_row); row <= max(start_row, finish_row); row++) {
                 if (field[row][finish_col].get_fixed() && field[row][finish_col].get_value() != value) return false;
                 field[row][finish_col].set_value(value);
+                field[row][finish_col].set_connected();;
             }
             return true;
         }
@@ -178,11 +210,13 @@ bool connect_path(cell field[ROW][COL], int value, int start_row, int start_col,
                 break;
             }
             field[row][start_col].set_value(value);
+            field[row][start_col].set_connected();
         }
         if (through_row) {
             for (int col = min(start_col, finish_col); col <= max(start_col, finish_col); col++) {
                 if (field[finish_row][col].get_fixed() && field[finish_row][col].get_value() != value) return false;
                 field[finish_row][col].set_value(value);
+                field[finish_row][col].set_connected();
             }
             return true;
         }
@@ -190,16 +224,56 @@ bool connect_path(cell field[ROW][COL], int value, int start_row, int start_col,
     return false; 
 }
 
+bool fill_fixed_numbers(cell field[ROW][COL], int connected, int value, int start_row, int start_col) {
+    deque<coord> queue;
+    int count = 0;
+
+    queue.push_front(coord(start_row, start_col));
+    
+    while (count < value - connected && !queue.empty()) {
+        coord current = queue.front();
+        queue.pop_front();
+
+        for (int i = 0; i < 4; i++) { 
+            int new_row = current.x + dir[i][0];
+            int new_col = current.y + dir[i][1];
+            //cout <<"Current: "<< current.x << " , " << current.y << endl;
+
+            while (can_place(new_row, new_col) && field[new_row][new_col].get_value() == 0) {
+                field[new_row][new_col].set_value(value);
+                field[new_row][new_col].set_connected();
+                count++;
+
+                //cout << start_row << " , " << start_col << " -> " << new_row << " , " << new_col << endl;
+
+                if (count >= value - connected) return true;
+
+                queue.push_front(coord(new_row, new_col));
+                
+                new_row += dir[i][0];
+                new_col += dir[i][1];
+
+                if(i == 3) i = 0;
+            }
+            if(queue.size() >= 1)current = queue.front();
+            //cout <<"Turn: "<< current.x << " , " << current.y << endl;
+        }
+    }
+    return false;
+}
 
 void solve(cell field[ROW][COL]){
     int x;
     int y;
     int max = 0;
     while((max = find_max_fixed_number(field, max, x, y)) != 1){
-        cout << max << endl;
-        while(find_same_fixed_number_BFS(field, max, x,y)){
-
-        }
+        while(connect_same_fixed_number_bfs(field, max, x,y));
+    }
+    max = 0;
+    while((max = find_max_fixed_number(field, max, x, y)) != 1){
+        //cout << max <<"  |" << x << " , " << y <<endl;
+        //cout <<"Count connected numbers: "<< count_connect_numbers(field, max, x, y) << endl;
+        fill_fixed_numbers(field, count_connect_numbers(field, max, x, y), max, x ,y);
     }
 }   
 
@@ -211,5 +285,3 @@ void print_field(cell field[ROW][COL]){
         cout << endl;
     }
 }
-
-
