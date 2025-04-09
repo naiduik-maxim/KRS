@@ -34,11 +34,14 @@ public:
 
 bool can_place(int row, int col);
 int find_max_fixed_number(cell field[ROW][COL], int max_number, int &row, int &col);
+bool find_empty_cell(cell field[ROW][COL], int &row, int &col);
+int count_empty_cell(cell field[ROW][COL], int start_row, int start_col);
 bool find_another_max_fixed_number(cell field[ROW][COL], int max_number, int &row, int &col);
 int count_connect_numbers(cell field[ROW][COL], int value, int start_row, int start_col);
 bool connect_same_fixed_number_bfs(cell field[ROW][COL], int value, int start_row, int start_col);
 bool connect_path(cell field[ROW][COL], int value, int start_row, int start_col, int finish_row, int finish_col);
 bool fill_fixed_numbers(cell field[ROW][COL], int connected, int value, int start_row, int start_col);
+bool fill_empty_cell(cell field[ROW][COL], int value, int start_row, int start_col);
 bool check_nearby(cell field[ROW][COL], int value, int start_row, int start_col);
 void solve(cell field[ROW][COL]);
 void print_field(cell field[ROW][COL]);
@@ -90,6 +93,47 @@ int find_max_fixed_number(cell field[ROW][COL], int currect_max_number, int &row
         }
     }
     return max_num;
+}
+
+bool find_empty_cell(cell field[ROW][COL], int &row, int &col){
+    for(int i = 0; i < ROW; i++){
+        for(int j = 0; j < COL; j++){
+            if(field[i][j].get_value() == 0 && !field[i][j].get_connected() && (i > row)){
+                row = i;
+                col = j;
+                return true;
+            } 
+        }
+    }
+    return false;
+}
+
+int count_empty_cell(cell field[ROW][COL], int start_row, int start_col){
+    queue<coord> search;
+    bool visited[ROW][COL] = {false};
+    int count = 1;
+
+    search.push(coord(start_row, start_col));
+    visited[start_row][start_col] = true;
+
+    while(!search.empty()){
+        coord currect = search.front();
+        search.pop();
+
+        for(int i = 0; i < 4; i++){
+            int new_row = currect.x + dir[i][0];
+            int new_col = currect.y + dir[i][1];
+
+            if(!field[new_row][new_col].get_connected() && !visited[new_row][new_col] 
+               && can_place(new_row, new_col) && field[new_row][new_col].get_value() == 0){
+                visited[new_row][new_col] = true;
+                search.push(coord(new_row, new_col));
+                field[new_row][new_col].set_connected();
+                count++;
+            }
+        }
+    }
+    return count;
 }
 
 bool find_another_max_fixed_number(cell field[ROW][COL], int max_number, int &row, int &col){
@@ -282,6 +326,46 @@ bool fill_fixed_numbers(cell field[ROW][COL], int connected, int value, int star
     return false;
 }
 
+bool fill_empty_cell(cell field[ROW][COL], int value, int start_row, int start_col){
+    deque<coord> queue;
+    int count = 0;
+    if(value == 1){
+        field[start_row][start_col].set_value(value);
+        field[start_row][start_col].set_connected();
+        return true;
+    }
+
+    queue.push_front(coord(start_row, start_col));
+    
+    while (count < value && !queue.empty()) {
+        coord current = queue.front();
+        queue.pop_front();
+
+        for (int i = 0; i < 4; i++) { 
+            int new_row = current.x + dir[i][0];
+            int new_col = current.y + dir[i][1];
+            //cout <<"Current: "<< current.x << " , " << current.y << endl;
+
+            while (can_place(new_row, new_col) && field[new_row][new_col].get_value() == 0) {
+                field[new_row][new_col].set_value(value);
+                field[new_row][new_col].set_connected();
+                count++;
+
+                if (count == value) return true;
+                queue.push_front(coord(new_row, new_col));
+                
+                new_row += dir[i][0];
+                new_col += dir[i][1];
+
+                if(can_place(new_row + dir[i][0], new_col + dir[i][1])) i = 0;
+            }
+            if(queue.size() >= 1)current = queue.front();
+            //cout <<"Turn: "<< current.x << " , " << current.y << endl;
+        }
+    }
+    return false;
+}
+
 bool check_nearby(cell field[ROW][COL], int value, int start_row, int start_col){
     for(int i = 0; i < 4; i++){
         int new_row = start_row + dir[i][0];
@@ -306,6 +390,15 @@ void solve(cell field[ROW][COL]){
             connect_same_fixed_number_bfs(field, max, x, y);
             fill_fixed_numbers(field, count_connect_numbers(field, max, x, y), max, x, y);
         }
+    }
+    int count;
+    x = 0;
+    y = 0;
+    while(find_empty_cell(field, x,y)){
+        cout << "coord empty" <<"  |" << x << " , " << y <<endl;
+        count = count_empty_cell(field, x, y);
+        cout << "Count empty cell: " << count <<endl;
+        fill_empty_cell(field, count, x,y);
     }
         //cout << max <<"  |" << x << " , " << y <<endl;
         //cout <<"Count connected numbers: "<< count_connect_numbers(field, max, x, y) << endl;
