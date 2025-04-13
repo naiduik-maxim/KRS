@@ -32,6 +32,8 @@ public:
     void set_value(int v) {value = v;}
 };
 
+bool find_zone(int &row,int &col);
+bool indetefy_zone(int row, int col, int &near_row, int &near_col);
 bool can_place(int row, int col);
 int find_max_fixed_number(cell field[ROW][COL], int max_number, int &row, int &col);
 bool find_empty_cell(cell field[ROW][COL], int &row, int &col);
@@ -45,6 +47,16 @@ bool fill_empty_cell(cell field[ROW][COL], int value, int start_row, int start_c
 bool check_nearby(cell field[ROW][COL], int value, int start_row, int start_col);
 void solve(cell field[ROW][COL]);
 void print_field(cell field[ROW][COL]);
+
+const int CONST_G_ZONE[ROW][COL] = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                                    {0, 3, 3, 4, 4, 0,12,12,11,11, 0},
+                                    {0, 2, 0, 0 ,5, 0,13, 0, 0, 0, 0},
+                                    {0, 0, 0, 0, 5, 0,13, 0, 0, 0, 0},
+                                    {0, 7, 7, 6, 6, 0,14,20,20,19, 0},
+                                    {0, 8, 0, 0, 0, 0,15, 0, 0,18, 0},
+                                    {0, 8, 0, 0,11, 0,15, 0, 0,18, 0},
+                                    {0, 9, 9,10,10, 0,16,16,17,17, 0},
+                                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
 
 int main(){
     cell field[ROW][COL] = {cell(), cell(), cell(), cell(), cell(), cell(), cell(), cell(), cell(), cell(), cell(),
@@ -65,6 +77,30 @@ int main(){
     cout <<" Solved field" << endl;
     print_field(field);
     return 0;
+}
+
+bool find_zone(int &row,int &col){
+    for(int i = 0; i < ROW; i++){
+        for(int j = 0; j < COL; j++){
+            if(CONST_G_ZONE[i][j] != 0 && ((i > row) || (i == row && j > col))){
+                row = i;
+                col = j;
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool indetefy_zone(int row, int col, int &near_row, int &near_col){
+    for(int i = 0; i < 4; i++){
+        if(CONST_G_ZONE[row + dir[i][0]][col + dir[i][1]] == CONST_G_ZONE[row][col]){
+            near_row = row + dir[i][0];
+            near_col = col + dir[i][1];
+            return true;
+        }
+    }
+    return false;
 }
 
 bool can_place(int row, int col){
@@ -377,10 +413,21 @@ bool check_nearby(cell field[ROW][COL], int value, int start_row, int start_col)
 }
 
 void solve(cell field[ROW][COL]){
-    int x;
-    int y;
-    int max = 0;
-    while((max = find_max_fixed_number(field, max, x, y)) != 1){
+    int x = 0;
+    int y = 0;
+    int near_x;
+    int near_y;
+    //int max = 0;
+
+    while(find_zone(x,y)){
+        if(indetefy_zone(x,y,near_x,near_y)){
+            cout << "Zone: " << CONST_G_ZONE[x][y] << "| (" << x << " , " << y << ") , (" << near_x << " , " << near_y << ")"<< endl;
+            
+        } else {
+            cout << "Zone: " << CONST_G_ZONE[x][y] << "| (" << x << " , " << y << ")" << endl;
+        }
+    }
+    /*while((max = find_max_fixed_number(field, max, x, y)) != 1){
         while(connect_same_fixed_number_bfs(field, max, x,y));
         //cout <<"Count connected numbers: "<< count_connect_numbers(field, max, x, y) << endl;
         fill_fixed_numbers(field, count_connect_numbers(field, max, x, y), max, x ,y);
@@ -401,7 +448,7 @@ void solve(cell field[ROW][COL]){
         fill_empty_cell(field, count, x,y);
     }
         //cout << max <<"  |" << x << " , " << y <<endl;
-        //cout <<"Count connected numbers: "<< count_connect_numbers(field, max, x, y) << endl;
+        //cout <<"Count connected numbers: "<< count_connect_numbers(field, max, x, y) << endl;*/
 }   
 
 void print_field(cell field[ROW][COL]){
