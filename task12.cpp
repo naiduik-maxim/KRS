@@ -30,21 +30,24 @@ public:
     bool get_connected() {return connected;}
     void set_connected() {connected = true;}
     void set_value(int v) {value = v;}
+    void set_fixed() {fixed = true;}
 };
 
-bool find_zone(int &row,int &col);
+bool find_zone(cell field[ROW][COL], int &row, int &col);
 bool indetefy_zone(int row, int col, int &near_row, int &near_col);
 bool can_place(int row, int col);
 int find_max_fixed_number(cell field[ROW][COL], int max_number, int &row, int &col);
 bool find_empty_cell(cell field[ROW][COL], int &row, int &col);
-int count_empty_cell(cell field[ROW][COL], int start_row, int start_col);
 bool find_another_max_fixed_number(cell field[ROW][COL], int max_number, int &row, int &col);
+int count_empty_cell(cell field[ROW][COL], int start_row, int start_col);
 int count_connect_numbers(cell field[ROW][COL], int value, int start_row, int start_col);
 bool connect_same_fixed_number_bfs(cell field[ROW][COL], int value, int start_row, int start_col);
 bool connect_path(cell field[ROW][COL], int value, int start_row, int start_col, int finish_row, int finish_col);
 bool fill_fixed_numbers(cell field[ROW][COL], int connected, int value, int start_row, int start_col);
+bool fill_zone(cell field[ROW][COL], int start_row, int start_col);
 bool fill_empty_cell(cell field[ROW][COL], int value, int start_row, int start_col);
 bool check_nearby(cell field[ROW][COL], int value, int start_row, int start_col);
+bool check_cell(cell field[ROW][COL], int value, int start_row, int start_col);
 void solve(cell field[ROW][COL]);
 void print_field(cell field[ROW][COL]);
 
@@ -79,10 +82,10 @@ int main(){
     return 0;
 }
 
-bool find_zone(int &row,int &col){
+bool find_zone(cell field[ROW][COL], int &row, int &col){
     for(int i = 0; i < ROW; i++){
         for(int j = 0; j < COL; j++){
-            if(CONST_G_ZONE[i][j] != 0 && ((i > row) || (i == row && j > col))){
+            if(CONST_G_ZONE[i][j] != 0 && ((i > row) || (i == row && j > col)) && field[i][j].get_value() == 0){
                 row = i;
                 col = j;
                 return true;
@@ -93,13 +96,15 @@ bool find_zone(int &row,int &col){
 }
 
 bool indetefy_zone(int row, int col, int &near_row, int &near_col){
-    for(int i = 0; i < 4; i++){
-        if(CONST_G_ZONE[row + dir[i][0]][col + dir[i][1]] == CONST_G_ZONE[row][col]){
+    for(int i = 0; i < 4;i++){
+        if((CONST_G_ZONE[row + dir[i][0]][col + dir[i][1]] == CONST_G_ZONE[row][col])){
             near_row = row + dir[i][0];
             near_col = col + dir[i][1];
             return true;
-        }
+        } 
     }
+    near_row = 0;
+    near_col = 0;
     return false;
 }
 
@@ -114,7 +119,7 @@ int find_max_fixed_number(cell field[ROW][COL], int currect_max_number, int &row
     for(int i = 0; i < ROW; i++){
         for(int j = 0; j < COL; j++){
             if(currect_max_number !=0){
-                if(field[i][j].get_value() > max_num && field[i][j].get_value() < currect_max_number){
+                if(field[i][j].get_value() > max_num && field[i][j].get_value() < currect_max_number && field[i][j].get_fixed()){
                     max_num = field[i][j].get_value();
                     row = i;
                     col = j;
@@ -402,6 +407,99 @@ bool fill_empty_cell(cell field[ROW][COL], int value, int start_row, int start_c
     return false;
 }
 
+bool fill_zone(cell field[ROW][COL], int start_row, int start_col){
+    int near_row;
+    int near_col;
+    bool two_cell_zone = indetefy_zone(start_row, start_col, near_row, near_col);
+    if(two_cell_zone){
+        if(CONST_G_ZONE[start_row][start_col] < 5){
+            field[start_row][start_col].set_value(CONST_G_ZONE[start_row][start_col] - 1);
+            field[near_row][near_col].set_value(1);
+            return true;
+        } else if(CONST_G_ZONE[start_row][start_col] >= 5 && CONST_G_ZONE[start_row][start_col] <= 10){
+            if(CONST_G_ZONE[start_row][start_col] % 2 == 0){
+                field[start_row][start_col].set_value(CONST_G_ZONE[start_row][start_col] / 2);
+                field[near_row][near_col].set_value(CONST_G_ZONE[start_row][start_col] / 2);
+                return true;
+            } else {
+                if(check_cell(field, CONST_G_ZONE[start_row][start_col] / 2 + 1, near_row, near_col) && 
+                   check_cell(field, CONST_G_ZONE[start_row][start_col] / 2, start_row, start_col)){
+                    int tmp = start_row;
+                    start_row = near_row;
+                    near_row = tmp;
+
+                    tmp = start_col;
+                    start_col = near_col;
+                    near_col = tmp;
+                }
+                field[start_row][start_col].set_value(CONST_G_ZONE[start_row][start_col] / 2 + 1);
+                field[near_row][near_col].set_value(CONST_G_ZONE[start_row][start_col] / 2);
+                return true;
+            }
+        } else if(CONST_G_ZONE[start_row][start_col] >= 11 && CONST_G_ZONE[start_row][start_col] <= 20){       
+            int fixed_row = 0;
+            int fixed_col = 0;
+            int fixed_num = find_max_fixed_number(field, CONST_G_ZONE[start_row][start_col], fixed_row, fixed_col);
+            if(abs(fixed_row - start_row) + abs(fixed_col - start_col) < fixed_num / 2 + 1 || 
+               abs(fixed_row - near_row) + abs(fixed_col - near_col) < fixed_num / 2 + 1){
+                if(fixed_num == 19) {
+                    fixed_num = find_max_fixed_number(field, CONST_G_ZONE[start_row][start_col] - 1, fixed_row, fixed_col);
+                }
+                if(CONST_G_ZONE[start_row][start_col] != 20){
+                if((check_cell(field, CONST_G_ZONE[start_row][start_col] - fixed_num, near_row, near_col) || 
+                    check_cell(field, fixed_num, start_row, start_col))){
+                    int tmp = start_row;
+                    start_row = near_row;
+                    near_row = tmp;
+
+                    tmp = start_col;
+                    start_col = near_col;
+                    near_col = tmp;
+                }
+            }
+                
+                field[start_row][start_col].set_value(CONST_G_ZONE[start_row][start_col]- fixed_num);
+                field[near_row][near_col].set_value(fixed_num);
+            } else {
+                if(CONST_G_ZONE[start_row][start_col] % 2 == 0){
+                    field[start_row][start_col].set_value(CONST_G_ZONE[start_row][start_col] / 2);
+                    field[near_row][near_col].set_value(CONST_G_ZONE[start_row][start_col] / 2);
+                    return true;
+                } else {
+                    if(check_cell(field, CONST_G_ZONE[start_row][start_col] / 2 + 1, near_row, near_col) && 
+                       check_cell(field, CONST_G_ZONE[start_row][start_col] / 2, start_row, start_col)){
+                        int tmp = start_row;
+                        start_row = near_row;
+                        near_row = tmp;
+    
+                        tmp = start_col;
+                        start_col = near_col;
+                        near_col = tmp;
+                    }
+                    field[start_row][start_col].set_value(CONST_G_ZONE[start_row][start_col] / 2 + 1);
+                    field[near_row][near_col].set_value(CONST_G_ZONE[start_row][start_col] / 2);
+                    return true;
+                }
+            }
+        }
+    } else {
+        field[start_row][start_col].set_value(CONST_G_ZONE[start_row][start_col]);
+        field[start_row][start_col].set_fixed();
+        return true;
+    }
+    return false;
+}
+
+bool check_cell(cell field[ROW][COL], int value, int start_row, int start_col){
+    for(int i = 0; i < 4; i++){
+        int new_row = start_row + dir[i][0];
+        int new_col = start_col + dir[i][1];
+
+        if(field[new_row][new_col].get_value() == value) return true;
+    }
+    return false;
+}
+
 bool check_nearby(cell field[ROW][COL], int value, int start_row, int start_col){
     for(int i = 0; i < 4; i++){
         int new_row = start_row + dir[i][0];
@@ -415,17 +513,18 @@ bool check_nearby(cell field[ROW][COL], int value, int start_row, int start_col)
 void solve(cell field[ROW][COL]){
     int x = 0;
     int y = 0;
-    int near_x;
-    int near_y;
+    int near_x = 0;
+    int near_y = 0;
     //int max = 0;
 
-    while(find_zone(x,y)){
-        if(indetefy_zone(x,y,near_x,near_y)){
-            cout << "Zone: " << CONST_G_ZONE[x][y] << "| (" << x << " , " << y << ") , (" << near_x << " , " << near_y << ")"<< endl;
-            
-        } else {
-            cout << "Zone: " << CONST_G_ZONE[x][y] << "| (" << x << " , " << y << ")" << endl;
-        }
+    while(find_zone(field, x, y)){
+        if(!indetefy_zone(x,y,near_x,near_y))
+            fill_zone(field, x,y);
+    }
+    x = 0;
+    y = 0;
+    while(find_zone(field, x, y)){
+        fill_zone(field, x,y);
     }
     /*while((max = find_max_fixed_number(field, max, x, y)) != 1){
         while(connect_same_fixed_number_bfs(field, max, x,y));
