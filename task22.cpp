@@ -137,6 +137,28 @@ int find_max_fixed_number(cell field[ROW][COL], int currect_max_number, int &row
     return max_num;
 }
 
+int find_min_fixed_number(cell field[ROW][COL], int current_min_number, int &row, int &col){
+    int min_num = 0;
+    for(int i = 0; i < ROW; i++){
+        for(int j = 0; j < COL; j++){
+            if(current_min_number != 0){
+                if(field[i][j].get_value() > min_num && field[i][j].get_value() > current_min_number && field[i][j].get_fixed()){
+                    min_num = field[i][j].get_value();
+                    row = i;
+                    col = j;
+                } 
+            } else {
+                if(field[i][j].get_value() > min_num && field[i][j].get_fixed()){
+                    min_num = field[i][j].get_value();
+                    row = i;
+                    col = j;
+                } 
+            }
+        }
+    }
+    return min_num;
+}
+
 bool find_empty_cell(cell field[ROW][COL], int &row, int &col){
     for(int i = 0; i < ROW; i++){
         for(int j = 0; j < COL; j++){
@@ -233,7 +255,7 @@ bool connect_same_fixed_number_bfs(cell field[ROW][COL], int value, int start_ro
             int new_row = currect.x + dir[i][0];
             int new_col = currect.y + dir[i][1];
 
-            if((abs(start_row - new_row) + abs(start_col - new_col)) > value) continue;
+            if((abs(start_row - new_row) + abs(start_col - new_col)) >= value) continue;
 
             if(can_place(new_row, new_col) && !visited[new_row][new_col]){
                 visited[new_row][new_col] = true;
@@ -244,7 +266,18 @@ bool connect_same_fixed_number_bfs(cell field[ROW][COL], int value, int start_ro
                    !field[new_row][new_col].get_connected() &&
                    (new_row != start_row || new_col != start_col) && 
                    count_connect_numbers(field, value, start_row, start_col) != value){
+                    for(int j = 0; j < 4; j++){
+                        int adj_row = new_row + dir[j][0];
+                        int adj_col = new_col + dir[j][1];
 
+                        if(field[adj_row][adj_col].get_connected() && field[adj_row][adj_col].get_value() == value){
+                            visited[adj_row][adj_col] = true;
+                            visited[new_row][new_col] = true;
+                            field[new_row][new_col].set_connected();
+                            field[adj_row][adj_col].set_connected();
+                            return true;
+                        } 
+                    }
                     if(connect_path(field, value, start_row, start_col, new_row, new_col)){
                         cout << start_row << " , " << start_col << " -> " << new_row << " , " << new_col << endl;
                         field[start_row][start_col].set_connected();
@@ -255,7 +288,6 @@ bool connect_same_fixed_number_bfs(cell field[ROW][COL], int value, int start_ro
             }
         }
     }
-
     return false;
 }
 
@@ -266,18 +298,16 @@ bool connect_path(cell field[ROW][COL], int value, int start_row, int start_col,
         for(int col = col_start + 1; col < col_end ; col++){
             if(field[start_row][col].get_fixed() && field[start_row][col].get_value() != value) return false;
             field[start_row][col].set_value(value);
-            field[start_row][col].set_connected();
         }
         return true;
     }
 
-    if (start_col == finish_col) {
+    else if (start_col == finish_col) {
         int row_start = min(start_row, finish_row);
         int row_end = max(start_row, finish_row);
         for (int row = row_start + 1; row < row_end; row++) {
             if (field[row][start_col].get_fixed() && field[row][start_col].get_value() != value) return false; 
             field[row][start_col].set_value(value);
-            field[row][start_col].set_connected();;
         }
         return true;
     }
@@ -290,13 +320,11 @@ bool connect_path(cell field[ROW][COL], int value, int start_row, int start_col,
                 break;
             }
             field[row][start_col].set_value(value);
-            field[row][start_col].set_connected();
         }
         if (through_row) {
             for (int col = min(start_col, finish_col); col <= max(start_col, finish_col); col++) {
                 if (field[finish_row][col].get_fixed() && field[finish_row][col].get_value() != value) return false;
                 field[finish_row][col].set_value(value);
-                field[finish_row][col].set_connected();
             }
             return true;
         }
@@ -310,18 +338,89 @@ bool connect_path(cell field[ROW][COL], int value, int start_row, int start_col,
                 break;
             }
             field[start_row][col].set_value(value);
-            field[start_row][col].set_connected();
 
         }
         if (through_col) {
             for (int row = min(start_row, finish_row); row <= max(start_row, finish_row); row++) {
                 if (field[row][finish_col].get_fixed() && field[row][finish_col].get_value() != value) return false;
                 field[row][finish_col].set_value(value);
-                field[row][finish_col].set_connected();;
             }
             return true;
         }
     }
+     
+    for (int mid_row = 0; mid_row < ROW; mid_row++) {
+        if (mid_row == start_row || mid_row == finish_row) continue;
+        bool ok = true;
+
+        int col_start = min(start_col, finish_col);
+        int col_end = max(start_col, finish_col);
+
+        for (int row = min(start_row, mid_row); row <= max(start_row, mid_row); row++) {
+            if (field[row][start_col].get_fixed() && field[row][start_col].get_value() != value) { ok = false; break; }
+        }
+
+        for (int col = col_start; col <= col_end; col++) {
+            if (field[mid_row][col].get_fixed() && field[mid_row][col].get_value() != value) { ok = false; break; }
+        }
+
+        for (int row = min(mid_row, finish_row); row <= max(mid_row, finish_row); row++) {
+            if (field[row][finish_col].get_fixed() && field[row][finish_col].get_value() != value) { ok = false; break; }
+        }
+
+        if (ok) {
+            for (int row = min(start_row, mid_row); row <= max(start_row, mid_row); row++) {
+                field[row][start_col].set_value(value);
+                field[row][start_col].set_connected();
+            }
+            for (int col = col_start; col <= col_end; col++) {
+                field[mid_row][col].set_value(value);
+                field[mid_row][col].set_connected();
+            }
+            for (int row = min(mid_row, finish_row); row <= max(mid_row, finish_row); row++) {
+                field[row][finish_col].set_value(value);
+                field[row][finish_col].set_connected();
+            }
+            return true;
+        }
+    }
+
+    for (int mid_col = 0; mid_col < COL; mid_col++) {
+        if (mid_col == start_col || mid_col == finish_col) continue;
+        bool ok = true;
+
+        int row_start = min(start_row, finish_row);
+        int row_end = max(start_row, finish_row);
+
+        for (int col = min(start_col, mid_col); col <= max(start_col, mid_col); col++) {
+            if (field[start_row][col].get_fixed() && field[start_row][col].get_value() != value) { ok = false; break; }
+        }
+
+        for (int row = row_start; row <= row_end; row++) {
+            if (field[row][mid_col].get_fixed() && field[row][mid_col].get_value() != value) { ok = false; break; }
+        }
+
+        for (int col = min(mid_col, finish_col); col <= max(mid_col, finish_col); col++) {
+            if (field[finish_row][col].get_fixed() && field[finish_row][col].get_value() != value) { ok = false; break; }
+        }
+
+        if (ok) {
+            for (int col = min(start_col, mid_col); col <= max(start_col, mid_col); col++) {
+                field[start_row][col].set_value(value);
+                field[start_row][col].set_connected();
+            }
+            for (int row = row_start; row <= row_end; row++) {
+                field[row][mid_col].set_value(value);
+                field[row][mid_col].set_connected();
+            }
+            for (int col = min(mid_col, finish_col); col <= max(mid_col, finish_col); col++) {
+                field[finish_row][col].set_value(value);
+                field[finish_row][col].set_connected();
+            }
+            return true;
+        }
+    }
+    
     return false; 
 }
 
@@ -540,21 +639,19 @@ void solve(cell field[ROW][COL]){
     while(find_zone(field, x, y)){
         fill_zone(field, x,y);
     }
+    
     while((max = find_max_fixed_number(field, max, x, y)) != 1){
         while(connect_same_fixed_number_bfs(field, max, x,y));
         getch();
         print_field(field);
-        cout <<"Count connected numbers: "<< count_connect_numbers(field, max, x, y) << endl;
-        cout << max <<"  |" << x << " , " << y <<endl;
-        //fill_fixed_numbers(field, count_connect_numbers(field, max, x, y), max, x ,y);
+        //cout <<"Count connected numbers: "<< count_connect_numbers(field, max, x, y) << endl;
         //cout << max <<"  |" << x << " , " << y <<endl;
-        /*while(find_another_max_fixed_number(field, max, x, y)){
-            if(max < 4) break;
-            cout << max <<"  |" << x << " , " << y <<endl;
-            connect_same_fixed_number_bfs(field, max, x, y);
-            fill_fixed_numbers(field, count_connect_numbers(field, max, x, y), max, x, y);
-        }*/
     }
+
+    max = 0;
+    //while((max = find_max_fixed_number(field, max, x, y)) != 1){
+    //    fill_fixed_numbers(field, count_connect_numbers(field, max, x, y), max, x, y);
+    //}
     //int count;
     x = 0;
     y = 0;
