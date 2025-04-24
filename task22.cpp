@@ -6,7 +6,7 @@
 #define ROW 9
 #define COL 11
 
-const int dir[4][2] = {{-1,0}, {0,-1}, {0,1}, {1,0}};
+const int dir[4][2] = {{-1,0}, {0,-1}, {1,0}, {0,1}};
 
 using namespace std;
 
@@ -47,7 +47,6 @@ bool connect_path(cell field[ROW][COL], int value, int start_row, int start_col,
 bool fill_fixed_numbers(cell field[ROW][COL], int connected, int value, int start_row, int start_col);
 bool fill_zone(cell field[ROW][COL], int start_row, int start_col);
 bool fill_empty_cell(cell field[ROW][COL], int value, int start_row, int start_col);
-bool check_nearby(cell field[ROW][COL], int value, int start_row, int start_col);
 bool check_cell(cell field[ROW][COL], int value, int start_row, int start_col);
 void solve(cell field[ROW][COL]);
 void print_field(cell field[ROW][COL]);
@@ -425,43 +424,64 @@ bool connect_path(cell field[ROW][COL], int value, int start_row, int start_col,
 }
 
 bool fill_fixed_numbers(cell field[ROW][COL], int connected, int value, int start_row, int start_col) {
-    deque<coord> queue;
-    int count = 0;
+    if (connected == value) return true;
+    int count = connected;
 
-    queue.push_front(coord(start_row, start_col));
-    
-    while (count < value - connected && !queue.empty()) {
+    deque<coord> queue;
+    deque<coord> connected_coords;
+    bool visited[ROW][COL] = {false};
+
+    visited[start_row][start_col] = true;
+    queue.push_back(coord(start_row, start_col));
+
+    while (!queue.empty()) {
         coord current = queue.front();
         queue.pop_front();
+        connected_coords.push_front(current);
 
-        for (int i = 0; i < 4; i++) { 
+        for (int i = 0; i < 4; i++) {
             int new_row = current.x + dir[i][0];
             int new_col = current.y + dir[i][1];
-            //cout <<"Current: "<< current.x << " , " << current.y << endl;
 
-            while (can_place(new_row, new_col) && field[new_row][new_col].get_value() == 0) {
-                if(check_nearby(field, value, new_row, new_col)){
-                    field[new_row][new_col].set_value(value);
-                    field[new_row][new_col].set_connected();
-                    count++;
-                } else{
-                    if(count == value - connected - 1){
-                        field[new_row][new_col].set_value(value);
-                        field[new_row][new_col].set_connected();
-                        count++;
-                    } 
-                    else break;
-                }
-                if (count == value - connected) return true;
-                queue.push_front(coord(new_row, new_col));
+            if (can_place(new_row, new_col) &&
+                field[new_row][new_col].get_value() == value &&
+                !visited[new_row][new_col]) {
+                visited[new_row][new_col] = true;
+                queue.push_back(coord(new_row, new_col));
+            }
+        }
+    }
+    coord currect;
+    bool visited_fixed[ROW][COL] = {false};
+    while (!connected_coords.empty() && count < value) {
+        coord currect;
+        currect = connected_coords.back();
+        connected_coords.pop_back();
+
+        for (int i = 0; i < 4; i++) {
+            int new_row = currect.x + dir[i][0];
+            int new_col = currect.y + dir[i][1];
+            cout <<"Current: "<< currect.x << " , " << currect.y << endl;
+            cout <<"New: "<< new_row << " , " << new_col << endl;
+
+            while (can_place(new_row, new_col) && 
+                  (field[new_row][new_col].get_value() == 0 || field[new_row][new_col].get_value() == value) 
+                   && !visited_fixed[new_row][new_col]) {
+                field[new_row][new_col].set_value(value);
+                field[new_row][new_col].set_connected();
+                visited_fixed[new_row][new_col] = true;
+                cout <<"New_fixed: "<< new_row << " , " << new_col << endl;
+                count = count_connect_numbers(field, value, start_row, start_col);
                 
+                if (count == value) return true;
+
+                connected_coords.push_back(coord(new_row, new_col));
+
                 new_row += dir[i][0];
                 new_col += dir[i][1];
-
-                if(can_place(new_row + dir[i][0], new_col + dir[i][1])) i = 0;
+                
             }
-            if(queue.size() >= 1)current = queue.front();
-            //cout <<"Turn: "<< current.x << " , " << current.y << endl;
+            if(connected_coords.size() > 0) currect = connected_coords.back();
         }
     }
     return false;
@@ -613,16 +633,6 @@ bool check_cell(cell field[ROW][COL], int value, int start_row, int start_col){
     return false;
 }
 
-bool check_nearby(cell field[ROW][COL], int value, int start_row, int start_col){
-    for(int i = 0; i < 4; i++){
-        int new_row = start_row + dir[i][0];
-        int new_col = start_col + dir[i][1];
-
-        if(count_connect_numbers(field, value, new_row, new_col) == value) return false;
-    }
-    return true;
-}
-
 void solve(cell field[ROW][COL]){
     int x = 0;
     int y = 0;
@@ -642,12 +652,16 @@ void solve(cell field[ROW][COL]){
     
     while((max = find_max_fixed_number(field, max, x, y)) != 1){
         while(connect_same_fixed_number_bfs(field, max, x,y));
-        getch();
-        print_field(field);
         //cout <<"Count connected numbers: "<< count_connect_numbers(field, max, x, y) << endl;
         //cout << max <<"  |" << x << " , " << y <<endl;
     }
 
+    //fill_fixed_numbers(field, 5, 19, 2, 10);
+    //fill_fixed_numbers(field, 1, 3, 7, 9);
+    fill_fixed_numbers(field, 1, 2, 3, 4);
+    fill_fixed_numbers(field, 1, 5, 3, 0);
+    //fill_fixed_numbers(field, 2, 4, 6, 8);
+    //fill_fixed_numbers(field, 11, 14,4,6);
     max = 0;
     //while((max = find_max_fixed_number(field, max, x, y)) != 1){
     //    fill_fixed_numbers(field, count_connect_numbers(field, max, x, y), max, x, y);
