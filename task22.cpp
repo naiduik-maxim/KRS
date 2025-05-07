@@ -56,9 +56,14 @@ public:
 };
 
 class game {
+    int max_number = 0;
+    int row_max = 0;
+    int col_max = 0;
+    int zone[ROW][COL];
     bool check_cell(int value, int start_row, int start_col);
     bool check_answer();
     int count_connect_numbers(int value, int start_row, int start_col);
+    int count_empty_cell(int start_row, int start_col);
     bool connect_same_fixed_number_bfs(int value, int start_row, int start_col);
     bool connect_path(int value, int start_row, int start_col, int finish_row, int finish_col);
     bool can_place(int row, int col);
@@ -66,13 +71,16 @@ class game {
     int find_min_fixed_number(int current_min_number, int &row, int &col);
     bool find_zone(int &row, int &col);
     bool find_another_fixed_number(int number, int &row, int &col);
+    bool find_empty_cell(int &row, int &col);
     bool fill_fixed_numbers(int connected, int value, int start_row, int start_col);
     bool fill_zone(int start_row, int start_col);
+    bool fill_empty_cell(int value, int start_row, int start_col);
     bool indetefy_zone(int row, int col, int &near_row, int &near_col);
     void pause();
 
 public:
     game();
+    game(int notused);
     cell field[ROW][COL];
     void solve();
     void solve_by_user();
@@ -83,22 +91,41 @@ public:
 void reset(int &a, int &b);
 void clear_console();
 
-int g_max_number;
 const int CONST_G_DIR[4][2] = {{-1,0}, {0,-1}, {1,0}, {0,1}};
-const int CONST_G_ZONE[ROW][COL] = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                                    {0, 3, 3, 4, 4, 0,12,12,11,11, 0},
-                                    {0, 2, 0, 0 ,5, 0,13, 0, 0, 0, 0},
-                                    {0, 0, 0, 0, 5, 0,13, 0, 0, 0, 0},
-                                    {0, 7, 7, 6, 6, 0,14,20,20,19, 0},
-                                    {0, 8, 0, 0, 0, 0,15, 0, 0,18, 0},
-                                    {0, 8, 0, 0,11, 0,15, 0, 0,18, 0},
-                                    {0, 9, 9,10,10, 0,16,16,17,17, 0},
-                                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
 
 int main(){
+    game game1;
+    char ans1;
 
+    cout << setw(45) << "Menu" << endl;
+    cout << setw(30) << " " << "1) Input playing field by user." << endl;
+    cout << setw(30) << " " << "2) Using programmed field." << endl;
+    cout << setw(30) << " " << "3) Exit." << endl;
+       
+    cout << setw(30) << " " << "Choose option: ";
+    cin >> ans1;
+
+    switch (ans1){
+    case '1':
+        game1 = game(0);
+        break;
+    case '2':
+        game1 = game();
+        break;
+    case '3':
+        clear_console();
+        cout << "Exiting!" << endl;
+        Sleep(1000);
+        clear_console();
+        return 0;
+    default:
+        cout << endl << setw(46) << "Auto-choose programmed!" << endl;
+        game1 = game();
+        break;
+    }
+
+    char ans2;
     while(true){
-        game game1;
         cout << setw(52) <<" Starting field" << endl;
         game1.print_field(false);
         cout <<endl << setw(47) <<"Zones" << endl;
@@ -110,11 +137,11 @@ int main(){
         cout << setw(30) << " " << "2) Show step-by-step answer." << endl;
         cout << setw(30) << " " << "3) Exit." << endl;
 
-        char ans;
+        
         cout << setw(30) << " " << "Choose option: ";
-        cin >> ans;
+        cin >> ans2;
 
-        switch (ans){
+        switch (ans2){
         case '1':
             clear_console();
             cout << endl << setw(55) << "Please input cells." << endl;
@@ -141,7 +168,11 @@ int main(){
             break;
         }
         cout << endl << endl;
-        game1.clear_field();
+        if(ans1 == '1'){
+            game1 = game(0);
+        } else if (ans1 == '2'){
+            game1 = game();
+        }
     }
 }
 
@@ -153,6 +184,7 @@ game :: game(){
     for(int i = 0; i < ROW; i++){
         for(int j = 0; j < COL; j++){
             field[i][j] = cell();
+            zone[i][j] = 0;
         }
     }
 
@@ -173,8 +205,113 @@ game :: game(){
     field[8][7] = cell(14);
     field[8][8] = cell(14);
 
-    int notused = 0;
-    g_max_number = find_max_fixed_number(0, notused, notused);
+    zone[1][1] = 3;
+    zone[1][2] = 3;
+    zone[1][3] = 4;
+    zone[1][4] = 4;
+    zone[1][6] = 12;
+    zone[1][7] = 12;
+    zone[1][8] = 11;
+    zone[1][9] = 11;
+
+    zone[2][1] = 2;
+    zone[2][4] = 5;
+    zone[2][6] = 13;
+
+    zone[3][4] = 5;
+    zone[3][6] = 13;
+
+    zone[4][1] = 7;
+    zone[4][2] = 7;
+    zone[4][3] = 6;
+    zone[4][4] = 6;
+    zone[4][6] = 14;
+    zone[4][7] = 20;
+    zone[4][8] = 20;
+    zone[4][9] = 19;
+
+    zone[5][1] = 8;
+    zone[5][6] = 15;
+    zone[5][9] = 18;
+
+    zone[6][1] = 8;
+    zone[6][4] = 11;
+    zone[6][6] = 15;
+    zone[6][9] = 18;
+
+    zone[7][1] = 9;
+    zone[7][2] = 9;
+    zone[7][3] = 10;
+    zone[7][4] = 10;
+
+    zone[7][6] = 16;
+    zone[7][7] = 16;
+    zone[7][8] = 17;
+    zone[7][9] = 17;
+
+    max_number = find_max_fixed_number(0, row_max,col_max);
+}
+
+/*  ---------------------------------------------------------------------[<]-
+    Constructor: game
+    Synopsis: Fills the field by user.
+ ---------------------------------------------------------------------[>]-*/
+game :: game (int notused){
+    for(int i = 0; i < ROW; i++){
+        for(int j = 0; j < COL; j++){
+            field[i][j] = cell();
+            zone[i][j] = 0;
+        }
+    }
+
+    cout << setw(52) <<" Starting field" << endl;
+    print_field(false);
+    cout <<endl << setw(47) <<"Zones" << endl;
+    print_field(true);
+
+    char confirm;
+    cout << "Do you want fill(Input 0 to exit): ";
+    cin >> confirm;
+
+    while(confirm != '0'){
+        int tmp_row;
+        int tmp_col;
+        cout << "Input coords(ROW COL): ";
+        cin >> tmp_row >> tmp_col;
+
+        if(cin.fail() || tmp_row < 0 || tmp_col < 0 || tmp_row >= ROW || tmp_col >= COL){
+            cin.clear();
+            cin.ignore(100,'\n');
+            cout << " Invalid coordinates. Try again." << endl;
+            continue;
+        }
+  
+        int new_val;
+        cout << "Input new value: ";
+        cin >> new_val;
+    
+        if (cin.fail() || new_val <= 0) {
+            cin.clear();
+            cin.ignore(100, '\n');
+            cout << "Invalid value. Try again." << endl;
+            continue;
+        }
+
+        field[tmp_row][tmp_col].set_value(new_val);
+        field[tmp_row][tmp_col].set_connected();
+        cout << "Value updated." << endl;
+        clear_console();
+        cout << setw(50) <<" Starting field" << endl;
+        print_field(false);
+
+
+        cout << "Do you want to fill another cell? (Input 0 to exit): ";
+        cin >> confirm;
+        clear_console();
+    }
+
+    max_number = find_max_fixed_number(0, row_max,col_max);
+    clear_console();
 }
 
 /*  ---------------------------------------------------------------------[<]-
@@ -214,14 +351,14 @@ bool game :: check_answer(){
     for(int row = 0; row < ROW; row++){
         for(int col = 0; col < COL; col++){
             count = count_connect_numbers(field[row][col].get_value(), row, col);
-            if(CONST_G_ZONE[row][col] != 0){
+            if(zone[row][col] != 0){
                 indetefy_zone(row, col, near_row, near_col);
                 if(near_row == 0 && near_col == 0){
                     if((count != field[row][col].get_value()) && 
-                        field[row][col].get_value()  != CONST_G_ZONE[row][col]) return false;
+                        field[row][col].get_value()  != zone[row][col]) return false;
                 } else {
                     if((count != field[row][col].get_value()) && 
-                        field[row][col].get_value() + field[near_row][near_col].get_value()  != CONST_G_ZONE[row][col]) return false;
+                        field[row][col].get_value() + field[near_row][near_col].get_value()  != zone[row][col]) return false;
                 }
             } else {
                 if(count != field[row][col].get_value()) return false;
@@ -255,6 +392,36 @@ bool game :: check_answer(){
 
             if(field[new_row][new_col].get_connected() && !visited[new_row][new_col] 
                && can_place(new_row, new_col) && field[new_row][new_col].get_value() == value){
+                visited[new_row][new_col] = true;
+                search.push(coord(new_row, new_col));
+                count++;
+            }
+        }
+    }
+    return count;
+}
+/*  ---------------------------------------------------------------------[<]-
+    Function: count_empty_cell
+    Synopsis: Counts the number of empty cells in a zone.
+ ---------------------------------------------------------------------[>]-*/
+int game :: count_empty_cell(int start_row, int start_col){
+    queue<coord> search;
+    bool visited[ROW][COL] = {false};
+    int count = 1;
+
+    search.push(coord(start_row, start_col));
+    visited[start_row][start_col] = true;
+
+    while(!search.empty()){
+        coord currect = search.front();
+        search.pop();
+
+        for(int i = 0; i < 4; i++){
+            int new_row = currect.row + CONST_G_DIR[i][0];
+            int new_col = currect.col + CONST_G_DIR[i][1];
+
+            if(!field[new_row][new_col].get_connected() && !visited[new_row][new_col] 
+               && can_place(new_row, new_col) && field[new_row][new_col].get_value() == 0){
                 visited[new_row][new_col] = true;
                 search.push(coord(new_row, new_col));
                 count++;
@@ -549,11 +716,28 @@ bool game :: check_answer(){
 bool game :: find_zone(int &row, int &col){
     for(int i = 0; i < ROW; i++){
         for(int j = 0; j < COL; j++){
-            if(CONST_G_ZONE[i][j] != 0 && ((i > row) || (i == row && j > col)) && field[i][j].get_value() == 0){
+            if(zone[i][j] != 0 && ((i > row) || (i == row && j > col)) && field[i][j].get_value() == 0){
                 row = i;
                 col = j;
                 return true;
             }
+        }
+    }
+    return false;
+}
+
+/*  ---------------------------------------------------------------------[<]-
+    Function: find_empty_cell
+    Synopsis: Search empty cell.
+ ---------------------------------------------------------------------[>]-*/
+bool game :: find_empty_cell(int &row, int &col){
+    for(int i = 0; i < ROW; i++){
+        for(int j = 0; j < COL; j++){
+            if(field[i][j].get_value() == 0 && !field[i][j].get_connected() && ((i > row) || (i == row && j > col))){
+                row = i;
+                col = j;
+                return true;
+            } 
         }
     }
     return false;
@@ -669,32 +853,32 @@ bool game :: fill_zone(int start_row, int start_col){
     int near_col;
     bool two_cell_zone = indetefy_zone(start_row, start_col, near_row, near_col);
     if(two_cell_zone){
-        if(CONST_G_ZONE[start_row][start_col] < 5){
-            field[start_row][start_col].set_value(CONST_G_ZONE[start_row][start_col] - 1);
+        if(zone[start_row][start_col] < 5){
+            field[start_row][start_col].set_value(zone[start_row][start_col] - 1);
             field[near_row][near_col].set_value(1);
             field[start_row][start_col].set_fixed();
             field[near_row][near_col].set_fixed();
 
-            cout << setw(45) << "Fill cell(" << start_row << ", " << start_col << "): " << CONST_G_ZONE[start_row][start_col] - 1 << endl;
+            cout << setw(45) << "Fill cell(" << start_row << ", " << start_col << "): " << zone[start_row][start_col] - 1 << endl;
             cout << setw(45) << "Fill cell(" << near_row << ", " << near_col << "): " << 1 << endl;
             return true;
         } 
 
-        else if(CONST_G_ZONE[start_row][start_col] >= 5 && CONST_G_ZONE[start_row][start_col] <= 10){
-            if(CONST_G_ZONE[start_row][start_col] % 2 == 0){
-                field[start_row][start_col].set_value(CONST_G_ZONE[start_row][start_col] / 2);
-                field[near_row][near_col].set_value(CONST_G_ZONE[start_row][start_col] / 2);
+        else if(zone[start_row][start_col] >= 5 && zone[start_row][start_col] <= 10){
+            if(zone[start_row][start_col] % 2 == 0){
+                field[start_row][start_col].set_value(zone[start_row][start_col] / 2);
+                field[near_row][near_col].set_value(zone[start_row][start_col] / 2);
                 field[start_row][start_col].set_fixed();
                 field[near_row][near_col].set_fixed();
 
-                cout << setw(45) << "Fill cell(" << start_row << ", " << start_col << "): " << CONST_G_ZONE[start_row][start_col] / 2<< endl;
-                cout << setw(45) << "Fill cell(" << near_row << ", " << near_col << "): " << CONST_G_ZONE[near_row][near_col] / 2 << endl;
+                cout << setw(45) << "Fill cell(" << start_row << ", " << start_col << "): " << zone[start_row][start_col] / 2<< endl;
+                cout << setw(45) << "Fill cell(" << near_row << ", " << near_col << "): " << zone[near_row][near_col] / 2 << endl;
                 return true;
             } 
 
             else {
-                if(check_cell(CONST_G_ZONE[start_row][start_col] / 2 + 1, near_row, near_col) && 
-                   check_cell(CONST_G_ZONE[start_row][start_col] / 2, start_row, start_col)){
+                if(check_cell(zone[start_row][start_col] / 2 + 1, near_row, near_col) && 
+                   check_cell(zone[start_row][start_col] / 2, start_row, start_col)){
                     int tmp = start_row;
                     start_row = near_row;
                     near_row = tmp;
@@ -703,28 +887,28 @@ bool game :: fill_zone(int start_row, int start_col){
                     start_col = near_col;
                     near_col = tmp;
                 }
-                field[start_row][start_col].set_value(CONST_G_ZONE[start_row][start_col] / 2 + 1);
-                field[near_row][near_col].set_value(CONST_G_ZONE[start_row][start_col] / 2);
+                field[start_row][start_col].set_value(zone[start_row][start_col] / 2 + 1);
+                field[near_row][near_col].set_value(zone[start_row][start_col] / 2);
                 field[start_row][start_col].set_fixed();
                 field[near_row][near_col].set_fixed();
 
-                cout << setw(45) << "Fill cell(" << start_row << ", " << start_col << "): " << CONST_G_ZONE[start_row][start_col] / 2 + 1<< endl;
-                cout << setw(45) << "Fill cell(" << near_row << ", " << near_col << "): " << CONST_G_ZONE[near_row][near_col] / 2 << endl;
+                cout << setw(45) << "Fill cell(" << start_row << ", " << start_col << "): " << zone[start_row][start_col] / 2 + 1<< endl;
+                cout << setw(45) << "Fill cell(" << near_row << ", " << near_col << "): " << zone[near_row][near_col] / 2 << endl;
                 return true;
             }
         } 
 
-        else if(CONST_G_ZONE[start_row][start_col] >= 11 && CONST_G_ZONE[start_row][start_col] <= 20){       
+        else if(zone[start_row][start_col] >= 11 && zone[start_row][start_col] <= 20){       
             int fixed_row = 0;
             int fixed_col = 0;
-            int fixed_num = find_max_fixed_number(CONST_G_ZONE[start_row][start_col], fixed_row, fixed_col);
+            int fixed_num = find_max_fixed_number(zone[start_row][start_col], fixed_row, fixed_col);
             if(abs(fixed_row - start_row) + abs(fixed_col - start_col) < fixed_num / 2 + 1 || 
                abs(fixed_row - near_row) + abs(fixed_col - near_col) < fixed_num / 2 + 1){
-                if(fixed_num == g_max_number) {
-                    fixed_num = find_max_fixed_number(CONST_G_ZONE[start_row][start_col] - 1, fixed_row, fixed_col);
+                if(fixed_num == max_number) {
+                    fixed_num = find_max_fixed_number(zone[start_row][start_col] - 1, fixed_row, fixed_col);
                 }
-                if(CONST_G_ZONE[start_row][start_col] != 20){
-                if((check_cell(CONST_G_ZONE[start_row][start_col] - fixed_num, near_row, near_col) || 
+                if(zone[start_row][start_col] != 20){
+                if((check_cell(zone[start_row][start_col] - fixed_num, near_row, near_col) || 
                     check_cell(fixed_num, start_row, start_col))){
                     int tmp = start_row;
                     start_row = near_row;
@@ -736,31 +920,31 @@ bool game :: fill_zone(int start_row, int start_col){
                 }
             }
                 
-                field[start_row][start_col].set_value(CONST_G_ZONE[start_row][start_col]- fixed_num);
+                field[start_row][start_col].set_value(zone[start_row][start_col]- fixed_num);
                 field[near_row][near_col].set_value(fixed_num);
                 field[start_row][start_col].set_fixed();
                 field[near_row][near_col].set_fixed();
 
-                cout << setw(45) << "Fill cell(" << start_row << ", " << start_col << "): " << CONST_G_ZONE[start_row][start_col] - fixed_num << endl;
+                cout << setw(45) << "Fill cell(" << start_row << ", " << start_col << "): " << zone[start_row][start_col] - fixed_num << endl;
                 cout << setw(45) << "Fill cell(" << near_row << ", " << near_col << "): " << fixed_num << endl;
                 return true;
             }
 
             else {
-                if(CONST_G_ZONE[start_row][start_col] % 2 == 0){
-                    field[start_row][start_col].set_value(CONST_G_ZONE[start_row][start_col] / 2);
-                    field[near_row][near_col].set_value(CONST_G_ZONE[start_row][start_col] / 2);
+                if(zone[start_row][start_col] % 2 == 0){
+                    field[start_row][start_col].set_value(zone[start_row][start_col] / 2);
+                    field[near_row][near_col].set_value(zone[start_row][start_col] / 2);
                     field[start_row][start_col].set_fixed();
                     field[near_row][near_col].set_fixed();
 
-                    cout << setw(45) << "Fill cell(" << start_row << ", " << start_col << "): " << CONST_G_ZONE[start_row][start_col] / 2 << endl;
-                    cout << setw(45) << "Fill cell(" << near_row << ", " << near_col << "): " << CONST_G_ZONE[near_row][near_col] / 2 << endl;
+                    cout << setw(45) << "Fill cell(" << start_row << ", " << start_col << "): " << zone[start_row][start_col] / 2 << endl;
+                    cout << setw(45) << "Fill cell(" << near_row << ", " << near_col << "): " << zone[near_row][near_col] / 2 << endl;
                     return true;
                 } 
                 
                 else {
-                    if(check_cell(CONST_G_ZONE[start_row][start_col] / 2 + 1, near_row, near_col) && 
-                       check_cell(CONST_G_ZONE[start_row][start_col] / 2, start_row, start_col)){
+                    if(check_cell(zone[start_row][start_col] / 2 + 1, near_row, near_col) && 
+                       check_cell(zone[start_row][start_col] / 2, start_row, start_col)){
                         int tmp = start_row;
                         start_row = near_row;
                         near_row = tmp;
@@ -769,13 +953,13 @@ bool game :: fill_zone(int start_row, int start_col){
                         start_col = near_col;
                         near_col = tmp;
                     }
-                    field[start_row][start_col].set_value(CONST_G_ZONE[start_row][start_col] / 2 + 1); 
-                    field[near_row][near_col].set_value(CONST_G_ZONE[start_row][start_col] / 2);
+                    field[start_row][start_col].set_value(zone[start_row][start_col] / 2 + 1); 
+                    field[near_row][near_col].set_value(zone[start_row][start_col] / 2);
                     field[start_row][start_col].set_fixed();
                     field[near_row][near_col].set_fixed();
 
-                    cout << setw(45) << "Fill cell(" << start_row << ", " << start_col << "): " << CONST_G_ZONE[start_row][start_col] / 2 + 1 << endl;
-                    cout << setw(45) << "Fill cell(" << near_row << ", " << near_col << "): " << CONST_G_ZONE[near_row][near_col] / 2 << endl;
+                    cout << setw(45) << "Fill cell(" << start_row << ", " << start_col << "): " << zone[start_row][start_col] / 2 + 1 << endl;
+                    cout << setw(45) << "Fill cell(" << near_row << ", " << near_col << "): " << zone[near_row][near_col] / 2 << endl;
                     return true;
                 }
             }
@@ -783,12 +967,66 @@ bool game :: fill_zone(int start_row, int start_col){
     } 
     
     else {
-        field[start_row][start_col].set_value(CONST_G_ZONE[start_row][start_col]);
+        field[start_row][start_col].set_value(zone[start_row][start_col]);
         field[start_row][start_col].set_fixed();
 
-        cout << setw(45) << "Fill cell(" << start_row << ", " << start_col << "): " << CONST_G_ZONE[start_row][start_col] << endl;
+        cout << setw(45) << "Fill cell(" << start_row << ", " << start_col << "): " << zone[start_row][start_col] << endl;
         return true;
     }
+    return false;
+}
+
+/*  ---------------------------------------------------------------------[<]-
+    Function: fill_empty_cell
+    Synopsis: Combines empty cells into a single area.
+ ---------------------------------------------------------------------[>]-*/
+bool game :: fill_empty_cell(int value, int start_row, int start_col){ 
+    deque<coord> queue;
+    deque<coord> connected_coords;
+    bool visited[ROW][COL] = {false};
+
+    visited[start_row][start_col] = true;
+    queue.push_back(coord(start_row, start_col));
+
+    while (!queue.empty()) {
+        coord current = queue.front();
+        queue.pop_front();
+        connected_coords.push_front(current);
+
+        for (int i = 0; i < 4; i++) {
+            int new_row = current.row + CONST_G_DIR[i][0];
+            int new_col = current.col + CONST_G_DIR[i][1];
+
+            if (can_place(new_row, new_col) &&
+                field[new_row][new_col].get_value() == 0 &&
+                !visited[new_row][new_col]) {
+                visited[new_row][new_col] = true;
+                queue.push_back(coord(new_row, new_col));
+            }
+
+            if(can_place(new_row, new_col) && 
+               field[new_row][new_col].get_value() == value &&
+               !visited[new_row][new_col]){
+                fill_empty_cell(value - 1, start_row, start_col);
+            }
+        }
+    }
+    coord currect;
+
+    int count = 0;
+    while (!connected_coords.empty()) {
+        coord currect;
+        currect = connected_coords.back();
+        connected_coords.pop_back();
+
+        field[currect.row][currect.col].set_value(value);
+        field[currect.row][currect.col].set_connected();
+                
+        count = count_connect_numbers(value, start_row, start_col);
+                
+        if (count == value) return true;
+    }
+    
     return false;
 }
 
@@ -798,7 +1036,7 @@ bool game :: fill_zone(int start_row, int start_col){
  ---------------------------------------------------------------------[>]-*/
 bool game :: indetefy_zone(int row, int col, int &near_row, int &near_col){
     for(int i = 0; i < 4;i++){
-        if((CONST_G_ZONE[row + CONST_G_DIR[i][0]][col + CONST_G_DIR[i][1]] == CONST_G_ZONE[row][col])){
+        if((zone[row + CONST_G_DIR[i][0]][col + CONST_G_DIR[i][1]] == zone[row][col])){
             near_row = row + CONST_G_DIR[i][0];
             near_col = col + CONST_G_DIR[i][1];
             return true;
@@ -841,39 +1079,52 @@ void game :: solve(){
     }
     
     while((max = find_max_fixed_number(max, row, col)) != 1){
+        if(max == 0) break;
         cout << setw(70) << "Find cells that have same value and merge them." << endl;
         while(connect_same_fixed_number_bfs(max, row, col));
         pause();
         max_numbers.push(max);
     }
 
-    max = 0;
-    reset(row,col);
-    max = find_max_fixed_number(max, row, col);
-
-    cout << setw(65) << "Fill the field with the largest value" << endl;
-    cout << setw(47) << "Value: " << max << endl;
-    fill_fixed_numbers(count_connect_numbers(max, row, col), max, row ,col);
-    pause();
+    
+    if(max_number != 0){
+        cout << setw(65) << "Fill the field with the largest value" << endl;
+        cout << setw(47) << "Value: " << max_number << endl;
+        cout << setw(55) << "Starting filling from cell(" << row_max << ", " << col_max << ")." << endl;
+        fill_fixed_numbers(count_connect_numbers(max_number, row_max, col_max), max_number, row_max ,col_max);
+        pause();
+    }
     
     reset(row,col);
-    int min = max_numbers.top();
-    max_numbers.pop();
-    while(min != max){
-        min = find_min_fixed_number(min, row, col);
-        cout << setw(85) << "Starting from the end, fill in the field from the smallest to the largest number" << endl;
-        cout << setw(47) << "Value: " << min << endl;
-        cout << setw(55) << "Starting filling from cell(" << row << ", " << col << ")." << endl;
-        
-        fill_fixed_numbers(count_connect_numbers(min, row, col), min, row, col);
-        while(find_another_fixed_number(min, row, col)){
-            cout << setw(55) << "Starting filling from cell(" << row << ", " << col << ")." << endl;
-            fill_fixed_numbers(count_connect_numbers(min, row, col), min, row ,col);
-        }
-        pause();
-        min = max_numbers.top();
+    if(max_numbers.size() > 0){
+        int min = max_numbers.top();
         max_numbers.pop();
+        while(min != max_number){
+            min = find_min_fixed_number(min, row, col);
+            cout << setw(85) << "Starting from the end, fill in the field from the smallest to the largest number" << endl;
+            cout << setw(47) << "Value: " << min << endl;
+            cout << setw(55) << "Starting filling from cell(" << row << ", " << col << ")." << endl;
+        
+            fill_fixed_numbers(count_connect_numbers(min, row, col), min, row, col);
+            while(find_another_fixed_number(min, row, col)){
+                cout << setw(55) << "Starting filling from cell(" << row << ", " << col << ")." << endl;
+                fill_fixed_numbers(count_connect_numbers(min, row, col), min, row ,col);
+            }
+            pause();
+            min = max_numbers.top();
+            max_numbers.pop();
+        }
     }
+
+    reset(row,col);
+    while(find_empty_cell(row, col)){
+        cout << setw(60) << "Search empty cell and fill cells." << endl;
+        int count_empty_cells = count_empty_cell(row, col);
+        fill_empty_cell(count_empty_cells, row, col);
+        pause();
+    }
+
+
 
     if(check_answer()){
         cout << setw(50) <<"Solved field" << endl; 
@@ -927,12 +1178,12 @@ void game :: solve_by_user(){
         }
     }
 
-    int confirm = 0;
+    char confirm = 1;
     cout << setw(50) <<" Starting field" << endl;
     print_field(false);
-    cout << "Do you want change(Input -1 to exit): ";
+    cout << "Do you want change(Input 0 to exit): ";
     cin >> confirm;
-    while(confirm != -1){
+    while(confirm != '0'){
 
         int tmp_row;
         int tmp_col;
@@ -968,7 +1219,7 @@ void game :: solve_by_user(){
             print_field(false);
         }
 
-        cout << "Do you want to change another cell? (Input -1 to exit): ";
+        cout << "Do you want to change another cell? (Input 0 to exit): ";
         cin >> confirm;
         clear_console();
     }
@@ -982,6 +1233,7 @@ void game :: solve_by_user(){
         cout << setw(64) <<"You solve field wrong! Try again!" << endl; 
     }
 }
+
 
 /*  ---------------------------------------------------------------------[<]-
     Function: print_field
@@ -1002,8 +1254,8 @@ void game :: print_field(bool zones, int row, int col){
                     else cout << "|" << setw(4) << field[i][j].get_value() << setw(4);
                 }
             } else {
-                if(j == 0) cout << setw(4) << CONST_G_ZONE[i][j] << setw(4);
-                else cout << "|" << setw(4) << CONST_G_ZONE[i][j]  << setw(4);
+                if(j == 0) cout << setw(4) << zone[i][j] << setw(4);
+                else cout << "|" << setw(4) << zone[i][j]  << setw(4);
             }
         }
         cout << '|' << endl;
