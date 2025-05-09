@@ -124,8 +124,12 @@ game :: game (int notused){
     char confirm;
     cout << "Do you want fill(Input 0 to exit): ";
     cin >> confirm;
+    clear_console();
 
     while(confirm != '0'){
+
+        cout << setw(50) <<" Starting field" << endl;
+        print_field(false);
         int tmp_row;
         int tmp_col;
         cout << "Input coords(ROW COL): ";
@@ -980,8 +984,6 @@ void game :: solve(){
         pause();
     }
 
-
-
     if(check_answer()){
         cout << setw(50) <<"Solved field" << endl; 
         print_field(false);
@@ -1028,8 +1030,7 @@ void game :: solve_by_user(){
             }
             field[i][j].set_value(num);
             field[i][j].set_connected();
-        
-       
+          
             clear_console();
         }
     }
@@ -1039,7 +1040,11 @@ void game :: solve_by_user(){
     print_field(false);
     cout << "Do you want change(Input 0 to exit): ";
     cin >> confirm;
+    clear_console();
+
     while(confirm != '0'){
+        cout << setw(50) <<" Starting field" << endl;
+        print_field(false);
 
         int tmp_row;
         int tmp_col;
@@ -1079,15 +1084,14 @@ void game :: solve_by_user(){
         cin >> confirm;
         clear_console();
     }
-
-    clear_console();
+    
+    while(getchar() != '\n');
     if(check_answer()){
         cout << setw(70) <<"You solve field correct! Congratulations!!!" << endl; 
-        print_field(false);
     } else {
-        print_field(false);
         cout << setw(64) <<"You solve field wrong! Try again!" << endl; 
     }
+    print_field(false);
 }
 
 

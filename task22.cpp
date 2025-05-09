@@ -55,6 +55,7 @@ int main(){
     default:
         cout << endl << setw(46) << "Auto-choose programmed!" << endl;
         game1 = game();
+        clear_console();
         break;
     }
 
@@ -98,6 +99,7 @@ int main(){
             return 0;
         default:
             cout << endl << setw(46) << "Choose from 1-3!" << endl;
+            clear_console();
             break;
         }
         cout << endl << endl;
@@ -106,5 +108,6 @@ int main(){
         } else if (ans1 == '2'){
             game1 = game();
         }
+    
     }
 }
