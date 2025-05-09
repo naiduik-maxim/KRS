@@ -909,10 +909,14 @@ void game :: solve(){
     int near_x = 0;
     int near_y = 0;
     int max = 0;
+    char ch;
     stack<int> max_numbers;
 
-    cout << setw(67) << "After step. Press button to continue." << endl;
-    cin.get();
+    cout << setw(67) << "After step. Press Enter to continue." << endl;
+    while (true) {
+        ch = cin.get();
+        if (ch == '\n') break;  
+    }
     clear_console();
 
     while(find_zone(row, col)){
@@ -1092,39 +1096,53 @@ void game :: solve_by_user(){
     Synopsis: Print field in console.
  ---------------------------------------------------------------------[>]-*/
 void game :: print_field(bool zones, int row, int col){
-    for(int i = 0; i < COL; i++) cout << "--------";
-    for(int i = 0; i < ROW; i++){
-        cout << endl << '|';
+    cout << "┌";
+    for (int j = 0; j < COL - 1; j++) cout << "─────" << "──┬"; 
+    cout << "─────" << "──┐" << endl; 
 
-        for(int j = 0; j < COL; j++){
+    for (int i = 0; i < ROW; i++) {
+        cout << "│"; 
+        for (int j = 0; j < COL; j++) {
             if(!zones){
                 if(i == row && j == col){
-                    if(j == 0) cout << setw(4) << "?" << setw(4);
-                    else cout << "|" << setw(4) << "?" << setw(4);
+                    if(j == 0) cout << setw(4) << "?";
+                    else cout << "   │" << setw(4) << "?";
                 } else {
-                    if(j == 0) cout << setw(4) << field[i][j].get_value() << setw(4);
-                    else cout << "|" << setw(4) << field[i][j].get_value() << setw(4);
+                    if(j == 0) cout << setw(4) << field[i][j].get_value();
+                    else cout << "   │" << setw(4) << field[i][j].get_value();
                 }
             } else {
-                if(j == 0) cout << setw(4) << zone[i][j] << setw(4);
-                else cout << "|" << setw(4) << zone[i][j]  << setw(4);
+                if(j == 0) cout << setw(4) << zone[i][j];
+                else cout << "   │" << setw(4) << zone[i][j];
             }
         }
-        cout << '|' << endl;
-        for(int i = 0; i < COL; i++) cout << "--------";
+        cout << "   │"; 
+        cout << endl;
+
+        if (i != ROW - 1) {
+            cout << "├"; 
+            for (int j = 0; j < COL - 1; j++) cout << "─────" << "──┼"; 
+            cout << "─────" << "──┤" << endl; 
+        }
     }
 
-    cout << endl;
+    cout << "└"; 
+    for (int j = 0; j < COL - 1; j++) cout << "─────" << "──┴"; 
+    cout << "─────" << "──┘" << endl;
 }
 
 /*  ---------------------------------------------------------------------[<]-
     Function: pause
     Synopsis: Algorithm for step-by-step view. To see the next step, you
-              need to press the button.
+              need to press the Enter.
  ---------------------------------------------------------------------[>]-*/
 void game :: pause(){
     print_field(false);
-    cout << "Press button to continue." << endl;
-    cin.get();
+    cout << "Press Enter to continue." << endl;
+    char ch;
+    while (true) {
+        ch = cin.get();
+        if (ch == '\n') break;  
+    }
     clear_console();
 }

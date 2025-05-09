@@ -13,6 +13,9 @@
  ------------------------------------------------------------------</Header>-*/
 #include <iostream>
 #include <iomanip>
+#ifdef _WIN32
+#include <windows.h>
+#endif
 #include "game.hpp"
 #include "console_handler.hpp"
 
@@ -22,6 +25,10 @@ using namespace std;
 
 
 int main(){
+    #ifdef _WIN32
+        SetConsoleOutputCP(65001);     
+    #endif
+
     game game1;
     char ans1;
 
@@ -73,14 +80,14 @@ int main(){
             clear_console();
             cout << endl << setw(55) << "Please input cells." << endl;
             game1.solve_by_user();
-            cout << "Press button to continue." << endl;
+            cout << "Press Enter to continue." << endl;
             cin.get();
             clear_console();
             break;
         case '2':
             cout << endl << setw(58) << "Showing step-by-step answer." << endl;
             game1.solve();
-            cout << "Press button to continue." << endl;
+            cout << "Press Enter to continue." << endl;
             cin.get();
             clear_console();
             break;
