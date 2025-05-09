@@ -14,6 +14,11 @@
         "utility": "cpp",
         "initializer_list": "cpp",
         "memory": "cpp",
-        "random": "cpp"
-    }
+        "random": "cpp",
+        "stack": "cpp",
+        "cstdlib": "cpp",
+        "queue": "cpp"
+    },
+    "makefile.makefilePath": "D:\\KPI\\codes\\C++\\KRS",
+    "makefile.makePath": ""
 }
