@@ -1100,12 +1100,15 @@ void game :: solve_by_user(){
     Synopsis: Print field in console.
  ---------------------------------------------------------------------[>]-*/
 void game :: print_field(bool zones, int row, int col){
-    cout << "┌";
+
+    for (int j = 0; j < COL; j++) cout << setw(7) << j << ' ';
+
+    cout << "\n  ┌";
     for (int j = 0; j < COL - 1; j++) cout << "─────" << "──┬"; 
     cout << "─────" << "──┐" << endl; 
 
     for (int i = 0; i < ROW; i++) {
-        cout << "│"; 
+        cout << i << " │"; 
         for (int j = 0; j < COL; j++) {
             if(!zones){
                 if(i == row && j == col){
@@ -1124,13 +1127,13 @@ void game :: print_field(bool zones, int row, int col){
         cout << endl;
 
         if (i != ROW - 1) {
-            cout << "├"; 
+            cout << "  ├"; 
             for (int j = 0; j < COL - 1; j++) cout << "─────" << "──┼"; 
             cout << "─────" << "──┤" << endl; 
         }
     }
 
-    cout << "└"; 
+    cout << "  └"; 
     for (int j = 0; j < COL - 1; j++) cout << "─────" << "──┴"; 
     cout << "─────" << "──┘" << endl;
 }
