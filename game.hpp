@@ -35,6 +35,7 @@ public:
     void solve();
     void solve_by_user();
     void print_field(bool zones, int row = -1, int col = -1);
+    bool initialized_zones();
     void clear_field();
 };
 

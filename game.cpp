@@ -116,19 +116,17 @@ game :: game (int notused){
         }
     }
 
-    cout << setw(52) <<" Starting field" << endl;
+    cout << setw(54) <<" Starting field" << endl;
     print_field(false);
-    cout <<endl << setw(47) <<"Zones" << endl;
-    print_field(true);
 
     char confirm;
-    cout << "Do you want fill(Input 0 to exit): ";
+    cout << "What cell you want set fixed(Input 0 to exit): ";
     cin >> confirm;
     clear_console();
 
     while(confirm != '0'){
 
-        cout << setw(50) <<" Starting field" << endl;
+        cout << setw(54) <<" Starting field" << endl;
         print_field(false);
         int tmp_row;
         int tmp_col;
@@ -139,9 +137,13 @@ game :: game (int notused){
             cin.clear();
             cin.ignore(100,'\n');
             cout << " Invalid coordinates. Try again." << endl;
-            continue;
+            clear_console();
+            continue;  
         }
-  
+
+        clear_console();
+        cout << setw(54) <<" Starting field" << endl;
+        print_field(false, tmp_row, tmp_col);
         int new_val;
         cout << "Input new value: ";
         cin >> new_val;
@@ -150,18 +152,19 @@ game :: game (int notused){
             cin.clear();
             cin.ignore(100, '\n');
             cout << "Invalid value. Try again." << endl;
+            clear_console();
             continue;
         }
 
         field[tmp_row][tmp_col].set_value(new_val);
         field[tmp_row][tmp_col].set_connected();
-        cout << "Value updated." << endl;
+        field[tmp_row][tmp_col].set_fixed();
         clear_console();
-        cout << setw(50) <<" Starting field" << endl;
+        cout << setw(55) <<" Starting field" << endl;
         print_field(false);
 
 
-        cout << "Do you want to fill another cell? (Input 0 to exit): ";
+        cout << "Do you want to set fixed another cell? (Input 0 to exit): ";
         cin >> confirm;
         clear_console();
     }
@@ -925,7 +928,7 @@ void game :: solve(){
 
     while(find_zone(row, col)){
         if(!indetefy_zone(row, col, near_x, near_y)){
-            cout << setw(65) << "Fill cells that have single-cell zones." << endl;
+            cout << setw(65) << "Fill cells that have single-cell blocks." << endl;
             fill_zone(row, col);
             pause();
         }
@@ -933,7 +936,7 @@ void game :: solve(){
 
     reset(row,col);
     while(find_zone(row, col)){
-        cout << setw(65) << "Fill cells that have two-cell zones." << endl;
+        cout << setw(65) << "Fill cells that have two-cell blocks." << endl;
         fill_zone(row, col);
         pause();
     }
@@ -1001,12 +1004,16 @@ void game :: solve_by_user(){
 
     for(int i = 0; i < ROW ; i++){
         for(int j = 0; j < COL; j++){
-            cout << setw(50) <<" Starting field" << endl;
+            cout << setw(55) <<" Starting field" << endl;
             print_field(false, i, j);
-            cout <<endl << setw(47) <<"Zones" << endl;
-            print_field(true);
 
-            cout << "Rules: The number in the area of each block ,is equal to the sum of all the numbers inside that block." << endl;
+            if (initialized_zones()){
+                cout <<endl << setw(49) << "Blocks" << endl;
+                print_field(true);
+            }
+
+            cout << "Rules: The number in the area of each block ,is equal to the sum of all the numbers" << endl;
+            cout << "       inside that block." << endl;
             cout << "       You can only fill cell that have value 0." << endl;
             cout << "       Each number on the playing field must become part of a continuous area,  "<< endl;
             cout << "       the number of cells of which corresponds to the value of this number." << endl;
@@ -1022,7 +1029,9 @@ void game :: solve_by_user(){
 
                 if(cin.fail() || num <= 0){
                     cin.clear();
-                    cin.ignore(100, '\n');    
+                    cin.ignore(100, '\n');
+                    cout << "Invalid value. Try again." << endl;
+                    continue;  
                 } else {
                     cin.ignore(100, '\n');  
                     break;
@@ -1036,14 +1045,14 @@ void game :: solve_by_user(){
     }
 
     char confirm = 1;
-    cout << setw(50) <<" Starting field" << endl;
+    cout << setw(54) << " Starting field" << endl;
     print_field(false);
     cout << "Do you want change(Input 0 to exit): ";
     cin >> confirm;
     clear_console();
 
     while(confirm != '0'){
-        cout << setw(50) <<" Starting field" << endl;
+        cout << setw(54) << " Starting field" << endl;
         print_field(false);
 
         int tmp_row;
@@ -1076,7 +1085,7 @@ void game :: solve_by_user(){
             field[tmp_row][tmp_col].set_connected();
             cout << "Value updated." << endl;
             clear_console();
-            cout << setw(50) <<" Starting field" << endl;
+            cout << setw(54) <<" Starting field" << endl;
             print_field(false);
         }
 
@@ -1099,7 +1108,7 @@ void game :: solve_by_user(){
     Function: print_field
     Synopsis: Print field in console.
  ---------------------------------------------------------------------[>]-*/
-void game :: print_field(bool zones, int row, int col){
+void game :: print_field(bool block, int row, int col){
 
     for (int j = 0; j < COL; j++) cout << setw(7) << j << ' ';
 
@@ -1110,7 +1119,7 @@ void game :: print_field(bool zones, int row, int col){
     for (int i = 0; i < ROW; i++) {
         cout << i << " │"; 
         for (int j = 0; j < COL; j++) {
-            if(!zones){
+            if(!block){
                 if(i == row && j == col){
                     if(j == 0) cout << setw(4) << "?";
                     else cout << "   │" << setw(4) << "?";
@@ -1136,6 +1145,19 @@ void game :: print_field(bool zones, int row, int col){
     cout << "  └"; 
     for (int j = 0; j < COL - 1; j++) cout << "─────" << "──┴"; 
     cout << "─────" << "──┘" << endl;
+}
+
+/*  ---------------------------------------------------------------------[<]-
+    Function: initialized_zones
+    Synopsis: Checks if blocks are initialized
+ ---------------------------------------------------------------------[>]-*/
+bool game :: initialized_zones(){
+    for(int i = 0; i < ROW; i++){
+        for(int j = 0; j < COL; j++){
+            if(zone[i][j] != 0) return true;
+        }
+    }
+    return false; 
 }
 
 /*  ---------------------------------------------------------------------[<]-

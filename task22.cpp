@@ -5,11 +5,11 @@
     Group:      TV-43
     Student:    Naiduik M.O
     Written:    2025-05-02
-    Revised:    2025-05-02
+    Revised:    2025-05-19
 
     Description:
         Solves a puzzle on a 9x11 grid using a cell class. The goal is to
-        fill zones and connect fixed values according to specified rules.
+        fill blocks and connect fixed values according to specified rules.
  ------------------------------------------------------------------</Header>-*/
 #include <iostream>
 #include <iomanip>
@@ -42,9 +42,11 @@ int main(){
 
     switch (ans1){
     case '1':
+        clear_console();
         game1 = game(0);
         break;
     case '2':
+        clear_console();
         game1 = game();
         break;
     case '3':
@@ -61,11 +63,13 @@ int main(){
 
     char ans2;
     while(true){
-        cout << setw(52) <<" Starting field" << endl;
+        cout << setw(54) <<" Starting field" << endl;
         game1.print_field(false);
-        cout <<endl << setw(47) <<"Zones" << endl;
-        game1.print_field(true);
-        cout << setw(50) << "Rules: The number in the area of each block ,is equal to the sum of all the numbers inside that block." << endl;
+
+        if (game1.initialized_zones()){
+            cout <<endl << setw(49) << "Blocks" << endl;
+            game1.print_field(true);
+        }
 
         cout << setw(45) << "Menu" << endl;
         cout << setw(30) << " " << "1) Input by user." << endl;
@@ -79,7 +83,7 @@ int main(){
         switch (ans2){
         case '1':
             clear_console();
-            cout << endl << setw(55) << "Please input cells." << endl;
+            cout << endl << setw(58) << "Please input cells." << endl;
             game1.solve_by_user();
             cout << "Press Enter to continue." << endl;
             cin.get();
