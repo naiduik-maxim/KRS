@@ -13,7 +13,7 @@
 
 using namespace std;
 
-const int CONST_G_DIR[4][2] = {{-1,0}, {0,-1}, {1,0}, {0,1}};
+const int CONST_G_DIR[4][2] = {{-1,0}, {0,-1}, {1,0}, {0,1}}; //Direction for BFS (up, right, down, left)
 
 /*  ---------------------------------------------------------------------[<]-
     Struct: coord
@@ -322,7 +322,7 @@ int game :: count_empty_cell(int start_row, int start_col){
                    (new_row != start_row || new_col != start_col) && 
                    count_connect_numbers(value, start_row, start_col) != value){
                     
-                    for(int j = 0; j < 4; j++){
+                    for(int j = 0; j < 4; j++){ //Check if the finish cell is in the range
                         int adj_row = new_row + CONST_G_DIR[j][0];
                         int adj_col = new_col + CONST_G_DIR[j][1];
 
@@ -355,10 +355,10 @@ int game :: count_empty_cell(int start_row, int start_col){
     Function: connect_path
     Synopsis: Connect same fixed numbers with same value starting from
               a given coordinate to finish coordinate using simple
-              methods(straight, L-turn, Z-turn). 
+              methods(straight, L-turn and  2-turns). 
  ---------------------------------------------------------------------[>]-*/
  bool game :: connect_path(int value, int start_row, int start_col, int finish_row, int finish_col) {
-    if(start_row == finish_row){
+    if(start_row == finish_row){ // Horizontally way
         int col_start = min(start_col, finish_col);
         int col_end = max(start_col, finish_col);
         for(int col = col_start + 1; col < col_end ; col++){
@@ -369,7 +369,7 @@ int game :: count_empty_cell(int start_row, int start_col){
         return true;
     }
 
-    else if (start_col == finish_col) {
+    else if (start_col == finish_col) { // Vertically way
         int row_start = min(start_row, finish_row);
         int row_end = max(start_row, finish_row);
         for (int row = row_start + 1; row < row_end; row++) {
@@ -380,7 +380,7 @@ int game :: count_empty_cell(int start_row, int start_col){
         return true;
     }
 
-    if (!field[finish_row][start_col].get_fixed() || field[finish_row][start_col].get_value() == value) {
+    if (!field[finish_row][start_col].get_fixed() || field[finish_row][start_col].get_value() == value) { // L-way: vertical first, then horizontal 
         bool through_row = true;
         for (int row = min(start_row, finish_row) + 1; row < max(start_row, finish_row); row++) {
             if (field[row][start_col].get_fixed() && field[row][start_col].get_value() != value) {
@@ -400,7 +400,7 @@ int game :: count_empty_cell(int start_row, int start_col){
         }
     }
 
-    if (!field[start_row][finish_col].get_fixed() || field[start_row][finish_col].get_value() == value) {
+    if (!field[start_row][finish_col].get_fixed() || field[start_row][finish_col].get_value() == value) { // L-way: horizontal first, then vertical 
         bool through_col = true;
         for (int col = min(start_col, finish_col) + 1; col < max(start_col, finish_col); col++) {
             if (field[start_row][col].get_fixed() && field[start_row][col].get_value() != value) {
@@ -421,7 +421,7 @@ int game :: count_empty_cell(int start_row, int start_col){
         }
     }
      
-    for (int mid_row = 0; mid_row < ROW; mid_row++) {
+    for (int mid_row = 0; mid_row < ROW; mid_row++) { // Vertical-Horizontal-Vertical way
         if (mid_row == start_row || mid_row == finish_row) continue;
         bool ok = true;
 
@@ -457,7 +457,7 @@ int game :: count_empty_cell(int start_row, int start_col){
         }
     }
 
-    for (int mid_col = 0; mid_col < COL; mid_col++) {
+    for (int mid_col = 0; mid_col < COL; mid_col++) { // Horizontal-Vertical-Horizontal way
         if (mid_col == start_col || mid_col == finish_col) continue;
         bool ok = true;
 
@@ -712,7 +712,7 @@ bool game :: fill_zone(int start_row, int start_col){
     int near_col;
     bool two_cell_zone = indetefy_zone(start_row, start_col, near_row, near_col);
     if(two_cell_zone){
-        if(zone[start_row][start_col] < 5){
+        if(zone[start_row][start_col] < 5){ // Rule 1.1
             field[start_row][start_col].set_value(zone[start_row][start_col] - 1);
             field[near_row][near_col].set_value(1);
             field[start_row][start_col].set_fixed();
@@ -723,7 +723,7 @@ bool game :: fill_zone(int start_row, int start_col){
             return true;
         } 
 
-        else if(zone[start_row][start_col] >= 5 && zone[start_row][start_col] <= 10){
+        else if(zone[start_row][start_col] >= 5 && zone[start_row][start_col] <= 10){ //Rule 1.2
             if(zone[start_row][start_col] % 2 == 0){
                 field[start_row][start_col].set_value(zone[start_row][start_col] / 2);
                 field[near_row][near_col].set_value(zone[start_row][start_col] / 2);
@@ -757,7 +757,7 @@ bool game :: fill_zone(int start_row, int start_col){
             }
         } 
 
-        else if(zone[start_row][start_col] >= 11 && zone[start_row][start_col] <= 20){       
+        else if(zone[start_row][start_col] >= 11 && zone[start_row][start_col] <= 20){ //Rule 1.3  
             int fixed_row = 0;
             int fixed_col = 0;
             int fixed_num = find_max_fixed_number(zone[start_row][start_col], fixed_row, fixed_col);
@@ -825,7 +825,7 @@ bool game :: fill_zone(int start_row, int start_col){
         }
     } 
     
-    else {
+    else { // Rule 2
         field[start_row][start_col].set_value(zone[start_row][start_col]);
         field[start_row][start_col].set_fixed();
 

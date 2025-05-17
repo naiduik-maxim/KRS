@@ -13,11 +13,11 @@
  ------------------------------------------------------------------</Header>-*/
 #include <iostream>
 #include <iomanip>
-#ifdef _WIN32
-#include <windows.h>
-#endif
 #include "game.hpp"
 #include "console_handler.hpp"
+#ifdef _WIN32 // Determines the operating system
+#include <windows.h>
+#endif
 
 #define ROW 9
 #define COL 11
@@ -26,7 +26,7 @@ using namespace std;
 
 int main(){
     #ifdef _WIN32
-        SetConsoleOutputCP(65001);     
+        SetConsoleOutputCP(65001); //Installing a special UTF-8 for formated output/   
     #endif
 
     game game1;
@@ -112,6 +112,6 @@ int main(){
         } else if (ans1 == '2'){
             game1 = game();
         }
-    
     }
+    return 0;
 }

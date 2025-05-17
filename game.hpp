@@ -5,11 +5,16 @@
 
 #include"cell.hpp"
 
+/*  ---------------------------------------------------------------------[<]-
+    Class: game
+    Synopsis: Implements all methods for finding a solution and processes
+              data entered by the user
+ ---------------------------------------------------------------------[>]-*/
 class game {
     int max_number = 0;
     int row_max = 0;
     int col_max = 0;
-    int zone[ROW][COL];
+    int zone[ROW][COL]; // Blocks
     bool check_cell(int value, int start_row, int start_col);
     bool check_answer();
     int count_connect_numbers(int value, int start_row, int start_col);

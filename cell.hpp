@@ -1,6 +1,10 @@
 #ifndef CELL_HPP
 #define CELL_HPP
 
+/*  ---------------------------------------------------------------------[<]-
+    Class: cell
+    Synopsis: Implements all methods for working with the playing field
+ ---------------------------------------------------------------------[>]-*/
 class cell {
     int value;
     bool fixed;
