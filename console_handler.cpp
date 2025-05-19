@@ -4,9 +4,9 @@ using namespace std;
 
 /*  ---------------------------------------------------------------------[<]-
     Function: reset
-    Synopsis: Set input value to 0.
+    Synopsis: Set first input value to 0, second to -1.
  ---------------------------------------------------------------------[>]-*/
-void reset(int &a, int &b){a = 0; b = 0;}
+void reset(int &a, int &b){a = 0; b = -1;}
 
 /*  ---------------------------------------------------------------------[<]-
     Function: clear_console

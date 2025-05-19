@@ -950,7 +950,7 @@ void game :: solve(){
     }
 
     
-    if(max_number != 0){
+    if(initialized_zones()){
         cout << setw(65) << "Fill the field with the largest value" << endl;
         cout << setw(47) << "Value: " << max_number << endl;
         cout << setw(55) << "Starting filling from cell(" << row_max << ", " << col_max << ")." << endl;
@@ -977,6 +977,13 @@ void game :: solve(){
             min = max_numbers.top();
             max_numbers.pop();
         }
+    }
+
+    if(!initialized_zones()){
+        cout << setw(47) << "Value: " << max_number << endl;
+        cout << setw(55) << "Starting filling from cell(" << row_max << ", " << col_max << ")." << endl;
+        fill_fixed_numbers(count_connect_numbers(max_number, row_max, col_max), max_number, row_max ,col_max);
+        pause();
     }
 
     reset(row,col);
